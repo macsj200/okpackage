@@ -2,7 +2,8 @@
 
 Run [ok.py](https://github.com/Cal-CS-61A-Staff/ok) tests from Atom editor
 
----Instructions---
+Instructions
+============
 ```
 git clone https://github.com/macsj200/okpackage
 cd okpackage
@@ -10,7 +11,8 @@ apm install
 apm link .
 ```
 
----TODO---
+TODO
+====
 * Fix path config for python binary
 * Style UI
 
