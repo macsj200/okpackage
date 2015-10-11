@@ -2,16 +2,18 @@ OkpackageView = require './okpackage-view'
 {CompositeDisposable} = require 'atom'
 
 spawn = require('child_process').spawn
-# recursive = require('recursive-readdir')
+recursive = require('recursive-readdir')
 fs = require 'fs'
 path = require 'path'
+os = require 'os'
 
 module.exports = Okpackage =
   packageName: require('../package.json').name
 
   executeTaskFor: (test) =>
-    # TODO FIX path!!!
-    ok = spawn('/Users/maxjohansen/anaconda3/bin/python', [
+    # Override @python with path to python3 binary
+    @python = "/Library/Frameworks/Python.framework/Versions/3.4/bin/python3"
+    ok = spawn(@python, [
       'ok'
       '-q'
       test
@@ -28,13 +30,24 @@ module.exports = Okpackage =
       return
 
   activate: ->
+    cwd = atom.project.getPaths()[0]
+
+    if not @python
+      if os.type() == "Darwin"
+        @python = "/System/Library/Frameworks/Python.framework/Python"
+        try
+          fs.statSync @python
+        catch err
+          # file doesn't exist
+          console.error 'unable to find python3 in', @python, 'override script by specifying path to python3 binary'
+      else
+        console.error "Don't know where python is on",os.type(),'Override script by specifying path to python3 binary'
+
     @subscriptions = new CompositeDisposable
     @subscriptions.add @taskMenuItems = new CompositeDisposable
     @subscriptions.add @taskCommands = new CompositeDisposable
     @tasks = []
     @tests = []
-
-    cwd = atom.project.getPaths()[0]
 
     files = fs.readdirSync cwd
 
