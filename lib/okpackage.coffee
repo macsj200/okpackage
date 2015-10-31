@@ -40,13 +40,16 @@ module.exports = Okpackage =
     #     raw: false
     #   console.log 'stdout: ' + data
     #   return
-    # ok.stderr.on 'data', (data) ->
-    #   console.log 'stderr: ' + data
-    #   return
+    ok.stderr.on 'data', (data) ->
+      console.log 'stderr: ' + data
+      return
     chunk = ''
 
     ok.stdout.on 'data', (data) ->
       chunk += data
+      if chunk.indexOf('bCourses email') > -1
+        console.log 'email required'
+        ok.stdin.write 'maxjohansen@berkeley.edu\n'
 
     ok.on 'close', (code) =>
       # console.log 'child process exited with code ' + code
@@ -72,10 +75,10 @@ module.exports = Okpackage =
       return
 
   activate: ->
-    cwd = atom.project.getPaths()[0]
+    @cwd = atom.project.getPaths()[0]
 
     try
-      fs.statSync path.join cwd, 'ok'
+      fs.statSync path.join @cwd, 'ok'
 
       @okpackageView = new OkpackageView()
       @modalPanel = atom.workspace.addModalPanel(item: @okpackageView.getElement(), visible: false)
@@ -108,16 +111,16 @@ module.exports = Okpackage =
       @onNewTask 'submit', {submit:true}
       @onNewTask 'all-tests'
 
-      files = fs.readdirSync cwd
+      files = fs.readdirSync @cwd
 
-      okFile = path.join cwd, (files.filter (file) -> file.indexOf('.ok') > -1 and !(file.indexOf('_') > -1))[0]
+      okFile = path.join @cwd, (files.filter (file) -> file.indexOf('.ok') > -1 and !(file.indexOf('_') > -1))[0]
       okFileTests = (JSON.parse fs.readFileSync okFile, encoding: 'utf8').tests
 
       @onNewTask test.slice(test.indexOf(':') + 1) for test, type of okFileTests when type == "doctest"
 
       try
-        fs.statSync path.join cwd, 'tests'
-        files = fs.readdirSync path.join cwd, 'tests'
+        fs.statSync path.join @cwd, 'tests'
+        files = fs.readdirSync path.join @cwd, 'tests'
 
         testFiles = files.filter (file) -> file.indexOf('.py') > -1 and !(file.indexOf('__') > -1)
 
