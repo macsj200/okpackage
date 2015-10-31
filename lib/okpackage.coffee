@@ -68,56 +68,62 @@ module.exports = Okpackage =
       return
 
   activate: ->
-    @okpackageView = new OkpackageView()
-    @modalPanel = atom.workspace.addModalPanel(item: @okpackageView.getElement(), visible: false)
-
-    @messages = new MessagePanelView
-      title: 'OK tests'
-
-    @messages.attach()
-
     cwd = atom.project.getPaths()[0]
 
-    if not @python
-      if os.type() == "Darwin"
-        @python = "/System/Library/Frameworks/Python.framework/Python"
-        try
-          fs.statSync @python
-        catch err
-          # file doesn't exist
-          console.error 'unable to find python3 in', @python, 'override script by specifying path to python3 binary'
-      else
-        console.error "Don't know where python is on",os.type(),'Override script by specifying path to python3 binary'
-
-    @subscriptions = new CompositeDisposable
-    @subscriptions.add @taskMenuItems = new CompositeDisposable
-    @subscriptions.add @taskCommands = new CompositeDisposable
-    @tasks = []
-    @tests = []
-
-    @subscriptions.add atom.commands.add 'atom-workspace',
-      'okpackage:toggle': => @toggle()
-
-    @onNewTask 'submit', {submit:true}
-    @onNewTask 'all-tests'
-
-    files = fs.readdirSync cwd
-
-    okFile = path.join cwd, (files.filter (file) -> file.indexOf('.ok') > -1 and !(file.indexOf('_') > -1))[0]
-    okFileTests = (JSON.parse fs.readFileSync okFile, encoding: 'utf8').tests
-
-    @onNewTask test.slice(test.indexOf(':') + 1) for test, type of okFileTests when type == "doctest"
-
     try
-      fs.statSync path.join cwd, 'tests'
-      files = fs.readdirSync path.join cwd, 'tests'
+      fs.statSync path.join cwd, 'ok'
 
-      testFiles = files.filter (file) -> file.indexOf('.py') > -1 and !(file.indexOf('__') > -1)
+      @okpackageView = new OkpackageView()
+      @modalPanel = atom.workspace.addModalPanel(item: @okpackageView.getElement(), visible: false)
 
-      @onNewTask test.replace '.py', '' for test in testFiles
+      @messages = new MessagePanelView
+        title: 'OK tests'
+
+      @messages.attach()
+
+      if not @python
+        if os.type() == "Darwin"
+          @python = "/System/Library/Frameworks/Python.framework/Python"
+          try
+            fs.statSync @python
+          catch err
+            # file doesn't exist
+            console.error 'unable to find python3 in', @python, 'override script by specifying path to python3 binary'
+        else
+          console.error "Don't know where python is on",os.type(),'Override script by specifying path to python3 binary'
+
+      @subscriptions = new CompositeDisposable
+      @subscriptions.add @taskMenuItems = new CompositeDisposable
+      @subscriptions.add @taskCommands = new CompositeDisposable
+      @tasks = []
+      @tests = []
+
+      @subscriptions.add atom.commands.add 'atom-workspace',
+        'okpackage:toggle': => @toggle()
+
+      @onNewTask 'submit', {submit:true}
+      @onNewTask 'all-tests'
+
+      files = fs.readdirSync cwd
+
+      okFile = path.join cwd, (files.filter (file) -> file.indexOf('.ok') > -1 and !(file.indexOf('_') > -1))[0]
+      okFileTests = (JSON.parse fs.readFileSync okFile, encoding: 'utf8').tests
+
+      @onNewTask test.slice(test.indexOf(':') + 1) for test, type of okFileTests when type == "doctest"
+
+      try
+        fs.statSync path.join cwd, 'tests'
+        files = fs.readdirSync path.join cwd, 'tests'
+
+        testFiles = files.filter (file) -> file.indexOf('.py') > -1 and !(file.indexOf('__') > -1)
+
+        @onNewTask test.replace '.py', '' for test in testFiles
+      catch err
+        # file doesn't exist, do nothing
+        console.log 'no tests directory'
     catch err
-      # file doesn't exist, do nothing
-      console.log 'no tests directory'
+      # ok file doesn't exist, do nothing
+      console.log 'no ok in project'
 
   deactivate: ->
     @subscriptions.dispose()
