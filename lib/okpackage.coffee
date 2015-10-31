@@ -8,6 +8,7 @@ fs = require 'fs'
 path = require 'path'
 os = require 'os'
 giphy = require( 'giphy' )( 'dc6zaTOxFJmzC' )
+process = require('process')
 
 module.exports = Okpackage =
   packageName: require('../package.json').name
@@ -24,7 +25,13 @@ module.exports = Okpackage =
 
 
     # Override @python with path to python3 binary
-    @python = "/Library/Frameworks/Python.framework/Versions/3.4/bin/python3"
+    if process.env.PYTHONPATH?
+      @python = process.env.PYTHONPATH
+    else if os.platform() == 'darwin'
+      @python = "/usr/local/bin/python3"
+    else
+      alert 'I don\'t know where your python is :\'-('
+
     ok = spawn(@python, flags, cwd: atom.project.getPaths()[0])
 
     # ok.stdout.on 'data', (data) =>
