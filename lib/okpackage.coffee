@@ -1,16 +1,18 @@
 OkpackageView = require './okpackage-view'
 {CompositeDisposable} = require 'atom'
+{MessagePanelView, LineMessageView, PlainMessageView} = require 'atom-message-panel'
 
 spawn = require('child_process').spawn
 recursive = require('recursive-readdir')
 fs = require 'fs'
 path = require 'path'
 os = require 'os'
+giphy = require( 'giphy' )( 'dc6zaTOxFJmzC' )
 
 module.exports = Okpackage =
   packageName: require('../package.json').name
 
-  spawnOk: (test, args) =>
+  spawnOk: (test, args) ->
     flags = ['ok']
 
     if(args?)
@@ -25,17 +27,47 @@ module.exports = Okpackage =
     @python = "/Library/Frameworks/Python.framework/Versions/3.4/bin/python3"
     ok = spawn(@python, flags, cwd: atom.project.getPaths()[0])
 
+    # ok.stdout.on 'data', (data) =>
+    #   @messages.add new PlainMessageView
+    #     message: data
+    #     raw: false
+    #   console.log 'stdout: ' + data
+    #   return
+    # ok.stderr.on 'data', (data) ->
+    #   console.log 'stderr: ' + data
+    #   return
+    chunk = ''
+
     ok.stdout.on 'data', (data) ->
-      console.log 'stdout: ' + data
-      return
-    ok.stderr.on 'data', (data) ->
-      console.log 'stderr: ' + data
-      return
-    ok.on 'close', (code) ->
-      console.log 'child process exited with code ' + code
+      chunk += data
+
+    ok.on 'close', (code) =>
+      # console.log 'child process exited with code ' + code
+      summary = chunk.slice(chunk.indexOf('Test summary') + 'Test summary'.length, chunk.indexOf('Back up'))
+
+      word = 'fail'
+
+      if chunk.indexOf 'No cases failed' > -1
+        word = 'success'
+
+      giphy.random {'tag':word}, (err, results) =>
+        url = results.data.image_url
+        # url = url.slice(0, url.length - 1)
+        @messages.add new PlainMessageView
+          message: "<div>" + "<strong>" + summary + "</strong><br/>" + chunk.replace(/\r?\n/g, "<br />") + "</div>" + "<img src=" + url + " />"
+          raw: true
+          className: 'okpackage'
       return
 
   activate: ->
+    @okpackageView = new OkpackageView()
+    @modalPanel = atom.workspace.addModalPanel(item: @okpackageView.getElement(), visible: false)
+
+    @messages = new MessagePanelView
+      title: 'OK tests'
+
+    @messages.attach()
+
     cwd = atom.project.getPaths()[0]
 
     if not @python
@@ -54,6 +86,9 @@ module.exports = Okpackage =
     @subscriptions.add @taskCommands = new CompositeDisposable
     @tasks = []
     @tests = []
+
+    @subscriptions.add atom.commands.add 'atom-workspace',
+      'okpackage:toggle': => @toggle()
 
     @onNewTask 'submit', {submit:true}
     @onNewTask 'all-tests'
@@ -78,6 +113,14 @@ module.exports = Okpackage =
 
   deactivate: ->
     @subscriptions.dispose()
+
+  toggle: ->
+    # console.log 'Toggled!'
+    #
+    # if @modalPanel.isVisible()
+    #   @modalPanel.hide()
+    # else
+    #   @modalPanel.show()
 
   onNewTask: (taskName, args) ->
     newTaskMenuItem = atom.menu.add [
