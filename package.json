@@ -7,7 +7,7 @@
   "activationCommands": {
     "atom-workspace": "okpackage:toggle"
   },
-  "repository": "https://github.com/atom/okpackage",
+  "repository": "https://github.com/macsj200/okpackage",
   "license": "MIT",
   "engines": {
     "atom": ">=1.0.0 <2.0.0"
