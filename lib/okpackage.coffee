@@ -60,6 +60,7 @@ module.exports = Okpackage =
       giphy.random {'tag':word}, (err, results) =>
         url = results.data.image_url
         # url = url.slice(0, url.length - 1)
+        @messages.clear()
         @messages.add new PlainMessageView
           message: "<div>" + "<strong>" + summary + "</strong><br/>" + chunk.replace(/\r?\n/g, "<br />") + "</div>" + "<img src=" + url + " />"
           raw: true
