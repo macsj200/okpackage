@@ -52,17 +52,21 @@ module.exports = Okpackage =
       # console.log 'child process exited with code ' + code
       summary = chunk.slice(chunk.indexOf('Test summary') + 'Test summary'.length, chunk.indexOf('Back up'))
 
+      @messages.setTitle('Ok: ' + summary)
+
       word = 'fail'
 
-      if chunk.indexOf 'No cases failed' > -1
+      if chunk.indexOf('No cases failed') > -1
         word = 'success'
+
+      console.log word
 
       giphy.random {'tag':word}, (err, results) =>
         url = results.data.image_url
         # url = url.slice(0, url.length - 1)
         @messages.clear()
         @messages.add new PlainMessageView
-          message: "<div>" + "<strong>" + summary + "</strong><br/>" + chunk.replace(/\r?\n/g, "<br />") + "</div>" + "<img src=" + url + " />"
+          message: "<div>" + chunk.replace(/\r?\n/g, "<br />") + "</div>" + "<img src=" + url + " />"
           raw: true
           className: 'okpackage'
       return
