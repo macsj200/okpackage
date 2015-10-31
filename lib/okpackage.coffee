@@ -20,6 +20,8 @@ module.exports = Okpackage =
     if(args?)
       if(args.submit?)
         flags.push '--submit'
+      if(args.unlock?)
+        flags.push '-u'
     else if(test != 'all-tests')
       flags.push '-q'
       flags.push test
@@ -33,7 +35,7 @@ module.exports = Okpackage =
     else
       alert 'I don\'t know where your python is :\'-('
 
-    ok = spawn(@python, flags, cwd: atom.project.getPaths()[0])
+    ok = spawn(@python, flags, cwd: @cwd)
 
     # ok.stdout.on 'data', (data) =>
     #   @messages.add new PlainMessageView
@@ -46,13 +48,16 @@ module.exports = Okpackage =
       return
     chunk = ''
 
-    ok.stdout.on 'data', (data) ->
+
+    ok.stdout.on 'data', (data) =>
       chunk += data
       if chunk.indexOf('bCourses email') > -1
         console.log 'email required'
         smalltalk.prompt('Question', 'bCourses email?').then((value) ->
           ok.stdin.write value+'\n'
         )
+      if chunk.indexOf('Locked') > -1
+        alert 'There are still tests to be unlocked.'
 
     ok.on 'close', (code) =>
       # console.log 'child process exited with code ' + code
@@ -70,7 +75,6 @@ module.exports = Okpackage =
       giphy.random {'tag':word}, (err, results) =>
         url = results.data.image_url
         # url = url.slice(0, url.length - 1)
-        @messages.clear()
         @messages.add new PlainMessageView
           message: "<div>" + chunk.replace(/\r?\n/g, "<br />") + "</div>" + "<img src=" + url + " />"
           raw: true
