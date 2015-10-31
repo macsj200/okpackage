@@ -9,6 +9,7 @@ path = require 'path'
 os = require 'os'
 giphy = require( 'giphy' )( 'dc6zaTOxFJmzC' )
 process = require('process')
+smalltalk = require('smalltalk')
 
 module.exports = Okpackage =
   packageName: require('../package.json').name
@@ -49,7 +50,9 @@ module.exports = Okpackage =
       chunk += data
       if chunk.indexOf('bCourses email') > -1
         console.log 'email required'
-        ok.stdin.write 'maxjohansen@berkeley.edu\n'
+        smalltalk.prompt('Question', 'bCourses email?').then((value) ->
+          ok.stdin.write value+'\n'
+        )
 
     ok.on 'close', (code) =>
       # console.log 'child process exited with code ' + code

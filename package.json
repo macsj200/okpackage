@@ -13,6 +13,7 @@
     "atom-message-panel": "^1.2.4",
     "atom-space-pen-views": "^2.1.0",
     "giphy": "0.0.4",
-    "recursive-readdir": "^1.2.1"
+    "recursive-readdir": "^1.2.1",
+    "smalltalk": "^1.5.6"
   }
 }
